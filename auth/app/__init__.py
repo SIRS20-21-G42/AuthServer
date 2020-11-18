@@ -1,10 +1,15 @@
 from model import connect, init
+from listener import listen
 import time
 
 
 def main():
+    # DB stuff
     connect()
     init()
+
+    # TCP stuff
+    listener = listen()
 
 
 if __name__ == '__main__':
