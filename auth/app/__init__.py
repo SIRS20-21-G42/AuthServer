@@ -1,7 +1,8 @@
 from model import connect, init
 from listener import listen
 from rest import launch
-from Crypto.PublicKey import RSA
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
 import time
 
 
@@ -12,14 +13,14 @@ def main():
 
     # Load private key
     private_key = None
-    with open('./testserver.key', 'r') as f:
-        private_key = RSA.import_key(f.read())
+    with open('./testserver.key', 'rb') as f:
+        private_key = serialization.load_pem_private_key(f.read(),
+                                                         password=None)
 
-    # Load public key
-    CA_public_key = None
-    with open('./CA.cert', 'r') as f:
-        CA_public_key = RSA.import_key(f.read())
-
+    # Load CA cert
+    CA_cert = None
+    with open('./CA.cert', 'rb') as f:
+        CA_cert = x509.load_pem_x509_certificate(f.read())
 
     # TCP stuff
     listener = listen()
