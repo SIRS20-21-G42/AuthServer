@@ -23,6 +23,7 @@ def connect():
 
 def init():
     try:
+        global connection
         cur = connection.cursor()
 
         cur.execute("SHOW TABLES LIKE 'Users'")
@@ -37,7 +38,9 @@ def init():
 
         cur.execute('''CREATE TABLE Users (
             username VARCHAR(20) BINARY NOT NULL,
-            secret BLOB NOT NULL
+            secret BLOB NOT NULL,
+            cert BLOB NOT NULL,
+            PRIMARY KEY (username)
         );
         ''')
         connection.commit()
@@ -45,3 +48,36 @@ def init():
         print('Initialized MySQL database')
     except Error as e:
         print(e)
+
+
+def get_user(username):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT * FROM Users WHERE username = %s"
+        values = (username,)
+        cur.execute(q, values)
+        data = cur.fetchall()
+        cur.close()
+        return data
+    except Error as e:
+        print(e)
+        return None
+
+
+def add_user(username, secret, cert_bytes):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "INSERT INTO Users (username, secret, cert) VALUES (%s, %s, %s)"
+        values = (username, secret, cert_bytes)
+        cur.execute(q, values)
+        connection.commit()
+        cur.close()
+        print("Added user", username)
+        return True
+    except Error as e:
+        print(e)
+        return False

@@ -12,4 +12,7 @@ def authenticate(user, totp):
 
 
 def launch():
-    app.run(host='0.0.0.0', debug=True, ssl_context=('./testserver.crt', './testserver.key'))
+    app.run(host='0.0.0.0',
+            debug=True,
+            use_reloader=False,
+            ssl_context=('./AUTH.cert', './AUTH.key'))
