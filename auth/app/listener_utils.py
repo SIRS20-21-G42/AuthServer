@@ -24,7 +24,7 @@ def part1_parts(part1_b64):
     if expected != real:
         raise RuntimeError("Invalid part1 structure")
 
-    ts = part1["ts"]
+    ts = str(part1["ts"])
     secret_key_b64 = part1["secretKey"]
     secret_key = None
     try:
@@ -158,7 +158,7 @@ def parts_3rd_message(message, secret_key, pub_key):
     if len(signature) != 256:  # 2048//8
         print("wrong size for signature")
         return None, f'{"error": "wrong size for signature, {len(signature)} bytes"}'
-    ts = message["ts"]
+    ts = str(message["ts"])
     username = message["username"]
 
     # Verify signature
