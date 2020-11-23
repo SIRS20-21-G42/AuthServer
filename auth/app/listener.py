@@ -86,14 +86,12 @@ def get_message(conn):
     if b"\n" not in recvd:
         raise RuntimeError("no \\n in message")
 
-    if globalized.DEBUG:
-        print("Received:", recvd)
+    globalized.debug(f"Received: {recvd}")
     return json.loads(recvd.strip())
 
 
 def put_message(conn, msg):
-    if globalized.DEBUG:
-        print("Sending:", msg)
+    globalized.debug(f"Sending: {msg}")
     msg_bytes = msg.encode()
     bytes_sent = 0
     while bytes_sent < len(msg_bytes):
@@ -122,6 +120,7 @@ def registration(first_msg_obj, conn):
         return
 
     # Decrypt part1
+    globalized.debug("about to decrypt part1")
     part1_b64 = parted_obj["part1"]
     tup, error = part1_parts(part1_b64)
     if error:
@@ -136,6 +135,7 @@ def registration(first_msg_obj, conn):
         put_message(conn, '{"error": "timestamp is not int"}')
         return
 
+    globalized.debug("about to check time and username")
     now = int(time.time())
     if not (now - 2*60 < ts_int < now + 1*60):
         print("timestamp out of acceptable range")
@@ -156,6 +156,7 @@ def registration(first_msg_obj, conn):
         return
 
     # Decrypt part2
+    globalized.debug("about to decrypt part2")
     part2_b64 = parted_obj["part2"]
     tup, error = part2_parts(part2_b64, secret_key, iv)
     if error:
@@ -203,6 +204,7 @@ def registration(first_msg_obj, conn):
         put_message(conn, '{"error": "invalid 3rd message"}')
         return
 
+    globalized.debug("checking parts of 3rd message")
     parts, error = parts_3rd_message(message, secret_key, pub_key)
     if error:
         put_message(conn, error)
@@ -226,6 +228,7 @@ def registration(first_msg_obj, conn):
                    certificate.public_bytes(serialization.Encoding.DER))
 
     # Send 4th message
+    globalized.debug("preparing 4th message")
     resp = "OK" if res else "NO"
     to_sign = (ts + resp).encode()
     signature = sign_to_b64(to_sign)

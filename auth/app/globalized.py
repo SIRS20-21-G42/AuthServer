@@ -17,3 +17,9 @@ def init(debug=True):
     # DEBUG?
     global DEBUG
     DEBUG = debug
+
+
+def debug(text):
+    global DEBUG
+    if DEBUG:
+        print("debug:", text)
