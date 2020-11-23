@@ -116,7 +116,7 @@ def part2_parts(part2_b64, secret_key, iv):
         print("wrong size for signature")
         return None, '{"error": "wrong size for signature, 256 bytes"}'
 
-    return certificate, signature
+    return (certificate, signature), None
 
 
 def aes_encrypt_to_b64(plain, key, iv):
