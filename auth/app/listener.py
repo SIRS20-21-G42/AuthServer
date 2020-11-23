@@ -169,7 +169,7 @@ def registration(first_msg_obj, conn):
     to_hash = (ts + username + secret_key_b64).encode()
     pub_key = certificate.public_key()
     try:
-        pub_key.verify(signature, to_hash, padding.PKCS1v15(), hashes.SHA256)
+        pub_key.verify(signature, to_hash, padding.PKCS1v15(), hashes.SHA256())
     except InvalidSignature:
         print("Invalid signature of part1")
         put_message(conn, '{"error": "Signature of part1 was invalid"}')
