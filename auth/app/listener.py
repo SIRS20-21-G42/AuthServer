@@ -220,7 +220,9 @@ def registration(first_msg_obj, conn):
         put_message(conn, '''{"error": "ts doesn't match"}''')
         return
 
-    secret = DH_private.exchange(int(B))
+    peer_public_numbers = dh.DHPublicNumbers(int(B), numbers)
+    peer_public_key = peer_public_numbers.public_key()
+    secret = DH_private.exchange(peer_public_key)
 
     # Store username, secret and certificate bytes
     res = add_user(username,
