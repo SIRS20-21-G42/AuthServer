@@ -2,8 +2,7 @@ import base64
 import json
 
 from cryptography import x509
-from cryptography.hazmat.primitives import asymmetric
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import asymmetric, hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.exceptions import InvalidSignature
 
@@ -57,7 +56,11 @@ def decrypt_aes_b64_to_dic(content_b64, key, iv):
     try:
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
         decryptor = cipher.decryptor()
-        content_json = decryptor.update(content_bytes) + decryptor.finalize()
+        decrypted = decryptor.update(content_bytes) + decryptor.finalize()
+
+        # remove padding
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        content_json = unpadder.update(decrypted) + unpadder.finalize()
     except ValueError as e:
         print(f"decryption of AES failed: {e}")
         return None, '{"error": "decryption of AES failed"}'
@@ -112,7 +115,10 @@ def part2_parts(part2_b64, secret_key, iv):
 def aes_encrypt_to_b64(plain, key, iv):
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
     encryptor = cipher.encryptor()
-    ciphertxt = encryptor.update(plain) + encryptor.finalize()
+    # add padding
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded = padder.update(plain) + padder.finalize()
+    ciphertxt = encryptor.update(padded) + encryptor.finalize()
     return base64.b64encode(ciphertxt)
 
 
