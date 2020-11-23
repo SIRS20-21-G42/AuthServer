@@ -10,6 +10,8 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.exceptions import InvalidSignature
 
+import globalized
+
 from listener_utils import part1_parts, iv_from_b64, part2_parts
 from listener_utils import sign_to_b64, parts_3rd_message, aes_encrypt_to_b64
 from model import get_user, add_user
@@ -84,10 +86,14 @@ def get_message(conn):
     if b"\n" not in recvd:
         raise RuntimeError("no \\n in message")
 
+    if globalized.DEBUG:
+        print("Received:", recvd)
     return json.loads(recvd.strip())
 
 
 def put_message(conn, msg):
+    if globalized.DEBUG:
+        print("Sending:", msg)
     msg_bytes = msg.encode()
     bytes_sent = 0
     while bytes_sent < len(msg_bytes):
