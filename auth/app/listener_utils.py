@@ -134,7 +134,7 @@ def sign_to_b64(plain):
     signature = private_key.sign(plain,
                                  asymmetric.padding.PKCS1v15(),
                                  hashes.SHA256())
-    return base64.b64encode(signature)
+    return base64.b64encode(signature).decode()
 
 
 def parts_3rd_message(message, secret_key, pub_key):
