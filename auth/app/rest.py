@@ -27,10 +27,17 @@ def authenticate(username, totp):
         from cryptography.hazmat.primitives.hashes import SHA256
         totp_obj = TOTP(secret, 6, SHA256(), 30)
         try:
+            # Checking against current code
             totp_obj.validate(totp.encode(), now)
             status = "OK"
         except InvalidToken:
-            status = "NO"
+            try:
+                # Checking against previoues code
+                before = now - 30
+                totp_obj.validate(totp.encode(), before)
+                status = "OK"
+            except InvalidToken:
+                status = "NO"
 
     body = {"username": username, "ts": str(now), "status": status}
 
