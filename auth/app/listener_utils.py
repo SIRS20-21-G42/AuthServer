@@ -77,7 +77,14 @@ def part2_parts(part2_b64, secret_key, iv):
     if expected != real:
         raise RuntimeError("Invalid part2 structure")
 
-    der_cert = part2["certificate"]
+    der_cert_b64 = part2["certificate"]
+    der_cert = None
+    try:
+        der_cert = base64.b64decode(der_cert_b64)
+    except Exception as e:
+        print(f"invalid base64 for certificate: {e}")
+        return None, '{"error": "base64 of certificate was invalid"}'
+
     certificate = None
     try:
         certificate = x509.load_der_x509_certificate(der_cert)
