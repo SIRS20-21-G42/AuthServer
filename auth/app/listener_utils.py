@@ -126,7 +126,7 @@ def aes_encrypt_to_b64(plain, key, iv):
     padder = padding.PKCS7(algorithms.AES.block_size).padder()
     padded = padder.update(plain) + padder.finalize()
     ciphertxt = encryptor.update(padded) + encryptor.finalize()
-    return base64.b64encode(ciphertxt)
+    return base64.b64encode(ciphertxt).decode()
 
 
 def sign_to_b64(plain):

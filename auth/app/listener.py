@@ -191,7 +191,7 @@ def registration(first_msg_obj, conn):
     iv2 = os.urandom(16)
     enc_content_b64 = aes_encrypt_to_b64(content_bytes, secret_key, iv2)
 
-    msg_2_dic = {"content": enc_content_b64, "iv": base64.b64encode(iv2)}
+    msg_2_dic = {"content": enc_content_b64, "iv": base64.b64encode(iv2).decode()}
     msg_2 = json.dumps(msg_2_dic) + "\n"
     put_message(conn, msg_2)
 
@@ -237,7 +237,7 @@ def registration(first_msg_obj, conn):
     iv4 = os.urandom(16)
     enc_content_b64 = aes_encrypt_to_b64(content_bytes, secret_key, iv4)
 
-    msg_4_dic = {"content": enc_content_b64, "iv": base64.b64encode(iv4)}
+    msg_4_dic = {"content": enc_content_b64, "iv": base64.b64encode(iv4).decode()}
     msg_4 = json.dumps(msg_4_dic) + "\n"
     put_message(conn, msg_4)
 
