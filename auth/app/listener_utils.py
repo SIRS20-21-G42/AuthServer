@@ -158,12 +158,12 @@ def parts_3rd_message(message, secret_key, pub_key):
 
     # Check structure of content
     expected = ["B", "signature", "ts", "username"]
-    real = sorted(list(message.keys()))
+    real = sorted(list(content_dic.keys()))
     if expected != real:
         raise RuntimeError("Invalid content structure")
 
-    B = message["B"]
-    signature_b64 = message["signature"]
+    B = content_dic["B"]
+    signature_b64 = content_dic["signature"]
     signature = None
     try:
         signature = base64.b64decode(signature_b64)
@@ -173,8 +173,8 @@ def parts_3rd_message(message, secret_key, pub_key):
     if len(signature) != 256:  # 2048//8
         print("wrong size for signature")
         return None, f'{"error": "wrong size for signature, {len(signature)} bytes"}'
-    ts = str(message["ts"])
-    username = message["username"]
+    ts = str(content_dic["ts"])
+    username = content_dic["username"]
 
     # Verify signature
     to_hash = (ts + username + B).encode()
