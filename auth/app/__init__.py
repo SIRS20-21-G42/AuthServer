@@ -1,8 +1,8 @@
+import globalized
 from model import connect, init
 from listener import listen
 from rest import launch
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization
+
 import time
 
 
@@ -11,16 +11,7 @@ def main():
     connect()
     init()
 
-    # Load private key
-    private_key = None
-    with open('./testserver.key', 'rb') as f:
-        private_key = serialization.load_pem_private_key(f.read(),
-                                                         password=None)
-
-    # Load CA cert
-    CA_cert = None
-    with open('./CA.cert', 'rb') as f:
-        CA_cert = x509.load_pem_x509_certificate(f.read())
+    globalized.init()
 
     # TCP stuff
     listener = listen()
