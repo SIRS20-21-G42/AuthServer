@@ -186,7 +186,7 @@ def registration(first_msg_obj, conn):
     to_sign = (ts + str(g) + str(N) + str(A)).encode()
     signature = sign_to_b64(to_sign)
 
-    content_dic = {"ts": ts, "g": g, "N": N, "A": A, "signature": signature}
+    content_dic = {"ts": ts, "g": str(g), "N": str(N), "A": str(A), "signature": signature}
     content_bytes = json.dumps(content_dic).encode()
     iv2 = os.urandom(16)
     enc_content_b64 = aes_encrypt_to_b64(content_bytes, secret_key, iv2)
