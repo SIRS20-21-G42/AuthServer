@@ -133,7 +133,7 @@ def sign_to_b64(plain):
     from globalized import private_key
     signature = private_key.sign(plain,
                                  asymmetric.padding.PKCS1v15(),
-                                 asymmetric.hashes.SHA256())
+                                 hashes.SHA256())
     return base64.b64encode(signature)
 
 
@@ -182,7 +182,7 @@ def parts_3rd_message(message, secret_key, pub_key):
         pub_key.verify(signature,
                        to_hash,
                        asymmetric.padding.PKCS1v15(),
-                       hashes.SHA256)
+                       hashes.SHA256())
     except InvalidSignature:
         print("Invalid signature of content")
         return None, '{"error": "Signature of content was invalid"}'
