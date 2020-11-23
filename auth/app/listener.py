@@ -192,8 +192,8 @@ def registration(first_msg_obj, conn):
     enc_content_b64 = aes_encrypt_to_b64(content_bytes, secret_key, iv2)
 
     msg_2_dic = {"content": enc_content_b64, "iv": base64.b64encode(iv2)}
-    msg_2_bytes = json.dumps(msg_2_dic).encode() + b"\n"
-    put_message(conn, msg_2_bytes)
+    msg_2 = json.dumps(msg_2_dic) + "\n"
+    put_message(conn, msg_2)
 
     # Receive 3rd message
     message = None
@@ -238,8 +238,8 @@ def registration(first_msg_obj, conn):
     enc_content_b64 = aes_encrypt_to_b64(content_bytes, secret_key, iv4)
 
     msg_4_dic = {"content": enc_content_b64, "iv": base64.b64encode(iv4)}
-    msg_4_bytes = json.dumps(msg_4_dic).encode() + b"\n"
-    put_message(conn, msg_4_bytes)
+    msg_4 = json.dumps(msg_4_dic) + "\n"
+    put_message(conn, msg_4)
 
 
 def list_auth(first_msg_obj, conn):
