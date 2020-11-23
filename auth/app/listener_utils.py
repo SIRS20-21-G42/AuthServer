@@ -64,7 +64,7 @@ def decrypt_aes_b64_to_dic(content_b64, key, iv):
     except ValueError as e:
         print(f"decryption of AES failed: {e}")
         return None, '{"error": "decryption of AES failed"}'
-    return json.loads(content_json)
+    return json.loads(content_json), None
 
 
 def part2_parts(part2_b64, secret_key, iv):
@@ -146,6 +146,8 @@ def parts_3rd_message(message, secret_key, pub_key):
     # Get content
     content_b64 = message["content"]
     content_dic, error = decrypt_aes_b64_to_dic(content_b64, secret_key, iv)
+    if error:
+        return None, error
 
     # Check structure of content
     expected = ["B", "signature", "ts", "username"]
