@@ -1,4 +1,5 @@
 import model
+import globalized
 
 from listener_utils import sign_to_b64
 
@@ -19,18 +20,23 @@ def authenticate(username, totp):
                 totp_obj.verify(totp.encode(), ts)
                 tup = model.get_user_otp(username)
                 if not tup:
+                    globalized.debug("Failed to get tup")
                     return False
                 last_totp, last_ts = tup
                 if last_totp == totp and ts - last_ts < 30:
+                    globalized.debug("otp already used")
                     return False
             except InvalidToken:
+                globalized.debug("Invalid token")
                 return False
             # If it fails to store we report failure
+            globalized.debug("success, going to store totp and ts")
             return model.store_user_otp(username, totp, ts)
 
         secret = model.get_user_secret(username)
         if not secret:
             # Unknown user
+            globalized.debug(f"Unkown user: {username}")
             return "??"
 
         from cryptography.hazmat.primitives.twofactor.totp import TOTP
