@@ -58,7 +58,7 @@ def get_user(username):
         q = "SELECT * FROM Users WHERE username = %s"
         values = (username,)
         cur.execute(q, values)
-        data = cur.fetchall()
+        data = cur.fetchone()
         cur.close()
         return data
     except Error as e:
