@@ -13,31 +13,38 @@ app.config['SECRET_KEY'] = '\x83\xe1\xba%j\x0b\xe5Q\xdeiG\xde\\\xb1\x94\xe4\x0e\
 
 @app.route('/authenticate/<username>/<totp>', methods=['GET'])
 def authenticate(username, totp):
-    now = int(time.time())
+    def auth_helper():
+        def auth_check(ts):
+            try:
+                totp_obj.verify(totp.encode(), ts)
+                tup = model.get_user_otp(username)
+                if not tup:
+                    return False
+                last_totp, last_ts = tup
+                if last_totp == totp and ts - last_ts < 30:
+                    return False
+            except InvalidToken:
+                return False
+            # If it fails to store we report failure
+            return model.store_user_otp(username, totp, ts)
 
-    user = model.get_user(username)
-    if not user:
-        status = "??"
+        secret = model.get_user_secret(username)
+        if not secret:
+            # Unknown user
+            return "??"
 
-    else:
         from cryptography.hazmat.primitives.twofactor.totp import TOTP
         from cryptography.hazmat.primitives.twofactor import InvalidToken
-        _, secret, _ = user
 
         from cryptography.hazmat.primitives.hashes import SHA256
         totp_obj = TOTP(secret, 6, SHA256(), 30)
-        try:
-            # Checking against current code
-            totp_obj.verify(totp.encode(), now)
-            status = "OK"
-        except InvalidToken:
-            try:
-                # Checking against previoues code
-                before = now - 30
-                totp_obj.verify(totp.encode(), before)
-                status = "OK"
-            except InvalidToken:
-                status = "NO"
+        if auth_check(now) or auth_check(now-30):
+            return "OK"
+        else:
+            return "NO"
+
+    now = int(time.time())
+    status = auth_helper()
 
     body = {"username": username, "ts": str(now), "status": status}
 

@@ -40,6 +40,8 @@ def init():
             username VARCHAR(20) BINARY NOT NULL,
             secret BLOB NOT NULL,
             cert BLOB NOT NULL,
+            last_code CHAR(6) NOT NULL,
+            last_ts INT,
             PRIMARY KEY (username)
         );
         ''')
@@ -66,12 +68,62 @@ def get_user(username):
         return None
 
 
+def get_user_secret(username):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT secret FROM Users WHERE username = %s"
+        values = (username,)
+        cur.execute(q, values)
+        data = cur.fetchone()
+        cur.close()
+        return data[0]
+    except Error as e:
+        print(e)
+        return None
+
+
+def get_user_otp(username):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT last_code, last_ts FROM Users WHERE username = %s"
+        values = (username,)
+        cur.execute(q, values)
+        data = cur.fetchone()
+        cur.close()
+        return data
+    except Error as e:
+        print(e)
+        return None
+
+
+def store_user_otp(username, totp, ts):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "UPDATE Users SET last_code = %s, last_ts=%s "
+        q += "WHERE username = %s;"
+        values = (totp, ts, username)
+        cur.execute(q, values)
+        connection.commit()
+        cur.close()
+        return True
+    except Error as e:
+        print(e)
+        return False
+
+
 def add_user(username, secret, cert_bytes):
     try:
         global connection
         cur = connection.cursor()
 
-        q = "INSERT INTO Users (username, secret, cert) VALUES (%s, %s, %s)"
+        q = "INSERT INTO Users (username, secret, cert, last_code, last_ts) "
+        q += "VALUES (%s, %s, %s, 'nonono', 0)"
         values = (username, secret, cert_bytes)
         cur.execute(q, values)
         connection.commit()
