@@ -28,13 +28,13 @@ def authenticate(username, totp):
         totp_obj = TOTP(secret, 6, SHA256(), 30)
         try:
             # Checking against current code
-            totp_obj.validate(totp.encode(), now)
+            totp_obj.verify(totp.encode(), now)
             status = "OK"
         except InvalidToken:
             try:
                 # Checking against previoues code
                 before = now - 30
-                totp_obj.validate(totp.encode(), before)
+                totp_obj.verify(totp.encode(), before)
                 status = "OK"
             except InvalidToken:
                 status = "NO"
