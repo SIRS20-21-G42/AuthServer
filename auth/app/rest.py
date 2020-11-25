@@ -5,7 +5,8 @@ from listener_utils import sign_to_b64
 
 import time
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, Response
+from werkzeug.exceptions import BadRequest
 
 app = Flask(__name__)
 
@@ -58,6 +59,32 @@ def authenticate(username, totp):
     signed = sign_to_b64(to_sign)
 
     return jsonify({'body': body, 'signature': signed})
+
+
+@app.route('/authorize', methods=['POST'])
+def authorize():
+    body = request.get_json()
+    if not body:
+        raise BadRequest("Missing JSON body")
+    expected = ["hash", "ts", "username"]
+    real = sorted(list(body.keys()))
+    if expected != real:
+        raise BadRequest("Wrong JSON fields")
+
+    username = body["username"]
+    update_hash = body["hash"]
+    ts = body["ts"]
+
+    user = model.get_user(username)
+    if not user:
+        globalized.debug(f"posting authorization for unkown user: {username}")
+        raise BadRequest("Unknown user")
+
+    success = model.store_auth(username, update_hash, ts)
+    if not success:
+        return Response("", status=201)
+    else:
+        return Response("", status=500)
 
 
 def launch():
