@@ -7,6 +7,9 @@ import time
 
 from flask import Flask, jsonify, request, Response
 from werkzeug.exceptions import BadRequest
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.exceptions import InvalidSignature
 
 app = Flask(__name__)
 
@@ -66,14 +69,23 @@ def authorize():
     body = request.get_json()
     if not body:
         raise BadRequest("Missing JSON body")
-    expected = ["hash", "ts", "username"]
+    expected = ["hash", "signature", "ts", "username"]
     real = sorted(list(body.keys()))
     if expected != real:
         raise BadRequest("Wrong JSON fields")
 
     username = body["username"]
     update_hash = body["hash"]
-    ts = body["ts"]
+    ts = int(body["ts"])
+    signature = body["signature"]
+
+    # Verify signature
+    to_hash = (username + ts + update_hash).encode()
+    pub_key = globalized.FaceFive_cert.public_key()
+    try:
+        pub_key.verify(signature, to_hash, padding.PKCS1v15(), hashes.SHA256())
+    except InvalidSignature:
+        raise BadRequest("Invalid signature of request")
 
     user = model.get_user(username)
     if not user:
