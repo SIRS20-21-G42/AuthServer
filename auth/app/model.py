@@ -161,3 +161,19 @@ def store_auth(username, update_hash, ts):
     except Error as e:
         print(e)
         return False
+
+
+def get_authorizations(username):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT hash, ts FROM Authorizations WHERE username = %s;"
+        values = (username,)
+        cur.execute(q, values)
+        data = cur.fetchall()
+        cur.close()
+        return data
+    except Error as e:
+        print(e)
+        return False

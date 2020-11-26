@@ -1,10 +1,13 @@
 import base64
 import json
+import time
 
 from cryptography import x509
 from cryptography.hazmat.primitives import asymmetric, hashes, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.exceptions import InvalidSignature
+
+import model
 
 
 def part1_parts(part1_b64):
@@ -112,7 +115,7 @@ def part2_parts(part2_b64, secret_key, iv):
     except Exception as e:
         print(f"invalid base64 for signature: {e}")
         return None, '{"error": "base64 of signature was invalid"}'
-    if len(signature) != 256:  # 256//8
+    if len(signature) != 256:  # 2048//8
         print("wrong size for signature")
         return None, '{"error": "wrong size for signature, 256 bytes"}'
 
@@ -188,3 +191,106 @@ def parts_3rd_message(message, secret_key, pub_key):
         return None, '{"error": "Signature of content was invalid"}'
 
     return (B, username, ts), None
+
+
+def sha256(secret):
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(secret)
+    return digest.finalize()
+
+
+def list_request(first_msg_obj):
+    # Check structure of first_msg_obj
+    expected = ["list"]
+    real = sorted(list(first_msg_obj.keys()))
+    if expected != real:
+        print("Invalid message structure")
+        return None, '{"error": "Invalid message structure"}'
+
+    parts = first_msg_obj["list"]
+    # Check structure of parts
+    expected = ["content", "iv", "username"]
+    real = sorted(list(parts.keys()))
+    if expected != real:
+        print("Invalid message structure")
+        return None, '{"error": "Invalid message structure"}'
+
+    # Get username
+    username = parts["username"]
+    if type(username) != str:
+        print("Username isn't str")
+        return None, '''{"error": "Username isn't str"}'''
+
+    # Get user
+    user = model.get_user(username)
+    if not user:
+        print("username not registered")
+        return None, '{"error": "username not registered"}'
+
+    _, shared_secret, der_cert, _, _ = user
+
+    certificate = None
+    try:
+        certificate = x509.load_der_x509_certificate(der_cert)
+    except Exception as e:
+        print(f"Error with loading cert: {e}")
+        return None, '{"error": "Could not load cert"}'
+
+    # Get iv
+    iv_b64 = parts["iv"]
+    iv, error = iv_from_b64(iv_b64)
+    if error:
+        return None, error
+
+    secret_key = sha256(shared_secret)
+    content_b64 = parts["content"]
+    content, error = decrypt_aes_b64_to_dic(content_b64, secret_key, iv)
+    if error:
+        return None, error
+
+    # check structure of content
+    expected = ["signature", "ts", "username"]
+    real = sorted(list(content.keys()))
+    if expected != real:
+        print("Invalid content structure")
+        return None, '{"error": "Invalid content structure"}'
+
+    inner_username = content["username"]
+    if inner_username != username:
+        print("inner username does not match")
+        return None, '{"error": "inner username does not match"}'
+
+    ts = content["ts"]
+    ts_int = None
+    try:
+        ts_int = int(ts)
+    except ValueError:
+        print("timestamp is not int")
+        return None, '{"error": "timestamp is not int"}'
+
+    now = int(time.time())
+    if not (now - 2*60 < ts_int < now + 1*60):
+        print("timestamp out of acceptable range")
+        return None, '{"error": "timestamp out of acceptable range"}'
+
+    signature_b64 = content["signature"]
+    signature = None
+    try:
+        signature = base64.b64decode(signature_b64)
+    except Exception as e:
+        print(f"invalid base64 for signature: {e}")
+        return None, '{"error": "base64 of signature was invalid"}'
+    if len(signature) != 256:  # 2048//8
+        print("wrong size for signature")
+        return None, '{"error": "wrong size for signature, 256 bytes"}'
+
+    # Verify signature
+    to_sign = (username + ts).encode()
+    pub_key = certificate.public_key()
+    try:
+        pub_key.verify(signature, to_sign, padding.PKCS1v15(), hashes.SHA256())
+    except InvalidSignature:
+        print("Invalid signature")
+        return None, '{"error": "Signature was invalid"}'
+
+    return (username, ts, secret_key), None

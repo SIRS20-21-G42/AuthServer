@@ -12,9 +12,10 @@ from cryptography.exceptions import InvalidSignature
 
 import globalized
 
-from listener_utils import part1_parts, iv_from_b64, part2_parts
+from listener_utils import part1_parts, iv_from_b64, part2_parts, list_request
 from listener_utils import sign_to_b64, parts_3rd_message, aes_encrypt_to_b64
-from model import get_user, add_user
+from listener_utils import sha256
+from model import get_user, add_user, get_authorizations
 
 
 def listen():
@@ -245,7 +246,35 @@ def registration(first_msg_obj, conn):
 
 
 def list_auth(first_msg_obj, conn):
-    pass
+    tup, error = list_request(first_msg_obj)
+    if error:
+        put_message(conn, error)
+        return
+
+    username, ts, secret_key = tup
+
+    authorizations = get_authorizations(username)
+
+    if not authorizations:
+        put_message(conn, '{"error": "There was a problem fetching the authorizations"}')
+        return
+
+    authorizations = [(x[0], str(x[1])) for x in authorizations]
+
+    content = {"list": authorizations, "ts": str(ts)}
+    json_content = json.dumps(content)
+    hashed = sha256(json_content)
+    hashed_b64 = base64.b64encode(hashed)
+
+    message = {"response": content, "hash": hashed_b64}
+    message_bytes = json.dumps(message).encode()
+
+    resp_iv = os.urandom(16)
+
+    enc_content_b64 = aes_encrypt_to_b64(message_bytes, secret_key, resp_iv)
+    resp_dic = {"content": enc_content_b64, "iv": base64.b64encode(resp_iv).decode()}
+    resp = json.dumps(resp_dic) + "\n"
+    put_message(conn, resp)
 
 
 def auth(first_msg_obj, conn):
