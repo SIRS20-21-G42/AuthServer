@@ -45,11 +45,39 @@ def init():
             PRIMARY KEY (username)
         );
         ''')
+
+        cur.execute('''CREATE TABLE Authorizations (
+            username VARCHAR(20) BINARY NOT NULL,
+            hash VARCHAR(64),
+            ts INT,
+            PRIMARY KEY (username, hash),
+            FOREIGN KEY (username) REFERENCES Users(username)
+        );
+        ''')
+
         connection.commit()
         cur.close()
         print('Initialized MySQL database')
     except Error as e:
         print(e)
+
+
+def add_user(username, secret, cert_bytes):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "INSERT INTO Users (username, secret, cert, last_code, last_ts) "
+        q += "VALUES (%s, %s, %s, 'nonono', 0)"
+        values = (username, secret, cert_bytes)
+        cur.execute(q, values)
+        connection.commit()
+        cur.close()
+        print("Added user", username)
+        return True
+    except Error as e:
+        print(e)
+        return False
 
 
 def get_user(username):
@@ -117,18 +145,18 @@ def store_user_otp(username, totp, ts):
         return False
 
 
-def add_user(username, secret, cert_bytes):
+def store_auth(username, update_hash, ts):
     try:
         global connection
         cur = connection.cursor()
 
-        q = "INSERT INTO Users (username, secret, cert, last_code, last_ts) "
-        q += "VALUES (%s, %s, %s, 'nonono', 0)"
-        values = (username, secret, cert_bytes)
+        q = "INSERT INTO Authorizations (username, hash, ts) "
+        q += "VALUES (%s, %s, %s)"
+        values = (username, update_hash, ts)
         cur.execute(q, values)
         connection.commit()
         cur.close()
-        print("Added user", username)
+        print("Added authorization for user", username)
         return True
     except Error as e:
         print(e)

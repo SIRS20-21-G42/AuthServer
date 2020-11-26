@@ -14,6 +14,11 @@ def init(debug=True):
     with open('./CA.cert', 'rb') as f:
         CA_cert = x509.load_pem_x509_certificate(f.read())
 
+    # Load FaceFive cert
+    global FaceFive_cert
+    with open('./FaceFive.cert', 'rb') as f:
+        CA_cert = x509.load_pem_x509_certificate(f.read())
+
     # DEBUG?
     global DEBUG
     DEBUG = debug
