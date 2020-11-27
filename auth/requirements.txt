@@ -2,3 +2,4 @@ Flask
 cryptography
 mysql-connector-python
 requests
+certifi
