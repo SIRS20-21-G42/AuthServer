@@ -1,6 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 
+import os
 
 connection = None
 
@@ -9,7 +10,7 @@ def connect():
     global connection
     if not connection:
         try:
-            connection = mysql.connector.connect(host='db',
+            connection = mysql.connector.connect(host=os.environ["DB_HOST"],
                                                  database='authdb',
                                                  user='auth',
                                                  password='authpass'
