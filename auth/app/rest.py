@@ -99,7 +99,7 @@ def authorize():
         raise BadRequest("Unknown user")
 
     success = model.store_auth(username, update_hash, ts)
-    if not success:
+    if success:
         return Response("", status=201)
     else:
         return Response("", status=500)
