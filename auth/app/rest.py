@@ -4,6 +4,7 @@ import globalized
 from listener_utils import sign_to_b64
 
 import time
+import base64
 
 from flask import Flask, jsonify, request, Response
 from werkzeug.exceptions import BadRequest
@@ -77,7 +78,12 @@ def authorize():
     username = body["username"]
     update_hash = body["hash"]
     ts = int(body["ts"])
-    signature = body["signature"]
+    signature_b64 = body["signature"]
+    signature = None
+    try:
+        signature = base64.b64decode(signature_b64)
+    except Exception:
+        raise BadRequest("Invalid base64 for signature")
 
     # Verify signature
     to_hash = (username + ts + update_hash).encode()

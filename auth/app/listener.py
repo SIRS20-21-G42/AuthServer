@@ -14,8 +14,8 @@ import globalized
 
 from listener_utils import part1_parts, iv_from_b64, part2_parts, list_request
 from listener_utils import sign_to_b64, parts_3rd_message, aes_encrypt_to_b64
-from listener_utils import sha256
-from model import get_user, add_user, get_authorizations
+from listener_utils import sha256, auth_request, auth_to_web
+import model
 
 
 def listen():
@@ -143,7 +143,7 @@ def registration(first_msg_obj, conn):
         put_message(conn, '{"error": "timestamp out of acceptable range"}')
         return
 
-    user = get_user(username)
+    user = model.get_user(username)
     if user:
         print("username already exists")
         put_message(conn, '{"error": "username already exists"}')
@@ -226,7 +226,7 @@ def registration(first_msg_obj, conn):
     secret = DH_private.exchange(peer_public_key)
 
     # Store username, secret and certificate bytes
-    res = add_user(username,
+    res = model.add_user(username,
                    secret,
                    certificate.public_bytes(serialization.Encoding.DER))
 
@@ -253,7 +253,7 @@ def list_auth(first_msg_obj, conn):
 
     username, ts, secret_key = tup
 
-    authorizations = get_authorizations(username)
+    authorizations = model.get_authorizations(username)
 
     if not authorizations:
         put_message(conn, '{"error": "There was a problem fetching the authorizations"}')
@@ -278,7 +278,43 @@ def list_auth(first_msg_obj, conn):
 
 
 def auth(first_msg_obj, conn):
-    pass
+    tup, error = auth_request(first_msg_obj)
+    if error:
+        put_message(conn, error)
+        return
+
+    username, ts, secret_key, update_hash, action = tup
+
+    # check for existence
+    exists = model.check_authorization(username, update_hash)
+    if not exists:
+        put_message(conn, '{"error": "No update matches given hash"}')
+        return
+
+    # send action to Web
+    web_success = auth_to_web(username, update_hash, action)
+    result = None
+    if web_success:
+        # check for existance and delete
+        success = model.remove_authorization(username, update_hash)
+
+        # if success send ok else send no
+        result = "OK" if success else "NO"
+    else:
+        result = "NO"
+
+    to_sign = (result+ts).encode()
+    signature = sign_to_b64(to_sign)
+    message = {"resp": result, "ts": ts, "signature": signature}
+    message_bytes = json.dumps(message).encode()
+
+    resp_iv = os.urandom(16)
+
+    enc_content_b64 = aes_encrypt_to_b64(message_bytes, secret_key, resp_iv)
+    resp_dic = {"content": enc_content_b64,
+                "iv": base64.b64encode(resp_iv).decode()}
+    resp = json.dumps(resp_dic) + "\n"
+    put_message(conn, resp)
 
 
 def location(first_msg_obj, conn):
