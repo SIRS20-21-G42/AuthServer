@@ -261,7 +261,7 @@ def list_request(first_msg_obj):
         print("inner username does not match")
         return None, '{"error": "inner username does not match"}'
 
-    ts = content["ts"]
+    ts = str(content["ts"])
     ts_int = None
     try:
         ts_int = int(ts)
@@ -289,7 +289,10 @@ def list_request(first_msg_obj):
     to_sign = (username + ts).encode()
     pub_key = certificate.public_key()
     try:
-        pub_key.verify(signature, to_sign, padding.PKCS1v15(), hashes.SHA256())
+        pub_key.verify(signature,
+                       to_sign,
+                       asymmetric.padding.PKCS1v15(),
+                       hashes.SHA256())
     except InvalidSignature:
         print("Invalid signature")
         return None, '{"error": "Signature was invalid"}'

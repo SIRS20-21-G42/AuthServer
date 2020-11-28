@@ -77,7 +77,13 @@ def authorize():
 
     username = body["username"]
     update_hash = body["hash"]
-    ts = int(body["ts"])
+    ts = body["ts"]
+    ts_int = None
+    try:
+        ts_int = int(ts)
+    except ValueError:
+        raise BadRequest("ts can't be converted to int")
+
     signature_b64 = body["signature"]
     signature = None
     try:
@@ -98,7 +104,7 @@ def authorize():
         globalized.debug(f"posting authorization for unkown user: {username}")
         raise BadRequest("Unknown user")
 
-    success = model.store_auth(username, update_hash, ts)
+    success = model.store_auth(username, update_hash, ts_int)
     if success:
         return Response("", status=201)
     else:

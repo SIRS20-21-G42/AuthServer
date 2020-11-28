@@ -263,8 +263,8 @@ def list_auth(first_msg_obj, conn):
 
     content = {"list": authorizations, "ts": str(ts)}
     json_content = json.dumps(content)
-    hashed = sha256(json_content)
-    hashed_b64 = base64.b64encode(hashed)
+    hashed = sha256(json_content.encode())
+    hashed_b64 = base64.b64encode(hashed).decode()
 
     message = {"response": content, "hash": hashed_b64}
     message_bytes = json.dumps(message).encode()
