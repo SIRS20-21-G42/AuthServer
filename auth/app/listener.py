@@ -255,14 +255,14 @@ def list_auth(first_msg_obj, conn):
 
     authorizations = model.get_authorizations(username)
 
-    if not authorizations:
+    if authorizations == False:
         put_message(conn, '{"error": "There was a problem fetching the authorizations"}')
         return
 
     authorizations = [(x[0], str(x[1])) for x in authorizations]
 
     content = {"list": authorizations, "ts": str(ts)}
-    json_content = json.dumps(content)
+    json_content = json.dumps(content, separators=(',', ':'))
     hashed = sha256(json_content.encode())
     hashed_b64 = base64.b64encode(hashed).decode()
 
@@ -303,7 +303,7 @@ def auth(first_msg_obj, conn):
     else:
         result = "NO"
 
-    to_sign = (result+ts).encode()
+    to_sign = (result+str(ts)).encode()
     signature = sign_to_b64(to_sign)
     message = {"resp": result, "ts": ts, "signature": signature}
     message_bytes = json.dumps(message).encode()

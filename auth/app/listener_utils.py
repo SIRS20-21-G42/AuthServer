@@ -286,7 +286,7 @@ def list_request(first_msg_obj):
         return None, '{"error": "wrong size for signature, 256 bytes"}'
 
     # Verify signature
-    to_sign = (username + ts).encode()
+    to_sign = (username + str(ts)).encode()
     pub_key = certificate.public_key()
     try:
         pub_key.verify(signature,
@@ -385,7 +385,7 @@ def auth_request(first_msg_obj):
         return None, '{"error": "base64 of signature was invalid"}'
 
     # Verify signature
-    to_sign = (ts + resp + update_hash).encode()
+    to_sign = (str(ts) + resp + update_hash).encode()
     pub_key = certificate.public_key()
     try:
         pub_key.verify(signature,
@@ -416,6 +416,6 @@ def auth_to_web(username, update_hash, action):
                "hash": update_hash,
                "signature": signed}
 
-    resp = requests.post("https://172.19.0.2:8080/authorize", json=message)
+    resp = requests.post("https://webapp:5000/authorize", json=message)
 
     return resp.status_code == 200

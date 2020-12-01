@@ -92,7 +92,7 @@ def authorize():
         raise BadRequest("Invalid base64 for signature")
 
     # Verify signature
-    to_hash = (username + ts + update_hash).encode()
+    to_hash = (username + str(ts) + update_hash).encode()
     pub_key = globalized.FaceFive_cert.public_key()
     try:
         pub_key.verify(signature, to_hash, padding.PKCS1v15(), hashes.SHA256())
