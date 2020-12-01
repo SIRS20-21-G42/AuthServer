@@ -161,3 +161,60 @@ def store_auth(username, update_hash, ts):
     except Error as e:
         print(e)
         return False
+
+
+def get_authorizations(username):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT hash, ts FROM Authorizations WHERE username = %s;"
+        values = (username,)
+        cur.execute(q, values)
+        data = cur.fetchall()
+        cur.close()
+        return data
+    except Error as e:
+        print(e)
+        return False
+
+
+def check_authorization(username, update_hash):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT hash FROM Authorizations "
+        q += "WHERE username = %s AND hash = %s;"
+        values = (username, update_hash)
+        cur.execute(q, values)
+        data = cur.fetchone()
+        cur.close()
+        return data is not None
+    except Error as e:
+        print(e)
+        return False
+
+
+def remove_authorization(username, update_hash):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT hash FROM Authorizations "
+        q += "WHERE username = %s AND hash = %s;"
+        values = (username, update_hash)
+        cur.execute(q, values)
+        data = cur.fetchone()
+        if data is None:
+            return False
+
+        q = "DELETE FROM Authorizations "
+        q += "WHERE username = %s AND hash = %s;"
+        cur.execute(q, values)
+        connection.commit()
+        cur.close()
+        return True
+    except Error as e:
+        print(e)
+        return False
