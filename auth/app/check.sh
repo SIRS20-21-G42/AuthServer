@@ -3,11 +3,6 @@
 MY_IP=10.74.0.5
 MY_IP2=10.13.37.5
 
-# Check if current folder exists
-if [ ! -d "auth" ]; then
-    mkdir auth
-fi
-
 # Check for CA certificate
 if [ ! -f "CA.cert" ]; then
     echo "Getting CA certificate"
@@ -43,7 +38,7 @@ fi
 # Check for FaceFive certificate
 while [ ! -f "FaceFive.cert" ]; do
     echo "Getting FaceFive certificate"
-    curl --fail --cacert CA.cert --capath . https://ca:5000/cert/FaceFive > FaceFive.cert
+    curl --fail --cacert CA.cert --capath . https://ca:5000/cert/FaceFive > FaceFive.cert 2> /dev/null
     if [ $? -ne 0 ]; then
         echo "Waiting for FaceFive cert to be available"
         rm FaceFive.cert
