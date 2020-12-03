@@ -42,6 +42,7 @@ def init():
             cert BLOB NOT NULL,
             last_code CHAR(6) NOT NULL,
             last_ts INT,
+            safe_ts INT,
             PRIMARY KEY (username)
         );
         ''')
@@ -211,6 +212,23 @@ def remove_authorization(username, update_hash):
 
         q = "DELETE FROM Authorizations "
         q += "WHERE username = %s AND hash = %s;"
+        cur.execute(q, values)
+        connection.commit()
+        cur.close()
+        return True
+    except Error as e:
+        print(e)
+        return False
+
+
+def store_safe_ts(username: str, ts: int):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "UPDATE Users SET safe_ts = %s "
+        q += "WHERE username = %s;"
+        values = (ts, username)
         cur.execute(q, values)
         connection.commit()
         cur.close()
