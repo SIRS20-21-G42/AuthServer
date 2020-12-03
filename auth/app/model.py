@@ -86,7 +86,7 @@ def get_user(username):
         global connection
         cur = connection.cursor()
 
-        q = "SELECT * FROM Users WHERE username = %s"
+        q = "SELECT username, secret, cert FROM Users WHERE username = %s"
         values = (username,)
         cur.execute(q, values)
         data = cur.fetchone()
