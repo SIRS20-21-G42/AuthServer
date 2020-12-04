@@ -14,7 +14,7 @@ import globalized
 
 from listener_utils import part1_parts, iv_from_b64, part2_parts, list_request
 from listener_utils import sign_to_b64, parts_3rd_message, aes_encrypt_to_b64
-from listener_utils import sha256, auth_request, auth_to_web
+from listener_utils import sha256, auth_request, auth_to_web, location_request
 import model
 
 
@@ -318,4 +318,30 @@ def auth(first_msg_obj, conn):
 
 
 def location(first_msg_obj, conn):
-    pass
+    tup, error = location_request(first_msg_obj)
+    if error:
+        put_message(conn, error)
+        return
+
+    username, ts_int, secret_key, safe = tup
+    ts = str(ts_int)
+
+    if safe == "NO":
+        # subtract 5 mins so that it isn't safe
+        ts_int = time.time() - 5 * 60
+    success = model.store_safe_ts(username, ts_int)
+
+    result = "OK" if success else "NO"
+
+    to_sign = (result+str(ts)).encode()
+    signature = sign_to_b64(to_sign)
+    message = {"resp": result, "ts": ts, "signature": signature}
+    message_bytes = json.dumps(message).encode()
+
+    resp_iv = os.urandom(16)
+
+    enc_content_b64 = aes_encrypt_to_b64(message_bytes, secret_key, resp_iv)
+    resp_dic = {"content": enc_content_b64,
+                "iv": base64.b64encode(resp_iv).decode()}
+    resp = json.dumps(resp_dic) + "\n"
+    put_message(conn, resp)
