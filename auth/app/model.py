@@ -236,3 +236,19 @@ def store_safe_ts(username: str, ts: int):
     except Error as e:
         print(e)
         return False
+
+
+def get_safe_ts(username: str):
+    try:
+        global connection
+        cur = connection.cursor()
+
+        q = "SELECT safe_ts FROM Users WHERE username = %s;"
+        values = (username,)
+        cur.execute(q, values)
+        data = cur.fetchone()
+        cur.close()
+        return data
+    except Error as e:
+        print(e)
+        return None
