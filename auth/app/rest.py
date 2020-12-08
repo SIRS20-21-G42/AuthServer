@@ -111,6 +111,32 @@ def authorize():
         return Response("", status=500)
 
 
+@app.route('/location/<username>', methods=['GET'])
+def location(username):
+    def location_helper():
+        safe_ts = model.get_safe_ts(username)
+        if not safe_ts:
+            # Unknown user
+            globalized.debug(f"Unkown user: {username}")
+            return "??"
+
+        return "OK" if now < safe_ts + 5 * 60 else "NO"
+
+    now = int(time.time())
+    ts = str(now)
+
+    status = location_helper()
+
+    to_sign = (username + status + ts).encode()
+
+    return jsonify({
+              "username": username,
+              "status": status,
+              "ts": ts,
+              "signature": sign_to_b64(to_sign)
+            })
+
+
 def launch():
     app.run(host='0.0.0.0',
             debug=True,
