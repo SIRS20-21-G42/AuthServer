@@ -41,8 +41,8 @@ def init():
             secret BLOB NOT NULL,
             cert BLOB NOT NULL,
             last_code CHAR(6) NOT NULL,
-            last_ts INT,
-            safe_ts INT,
+            last_ts INT DEFAULT 0,
+            safe_ts INT DEFAULT 0,
             PRIMARY KEY (username)
         );
         ''')
@@ -248,7 +248,7 @@ def get_safe_ts(username: str):
         cur.execute(q, values)
         data = cur.fetchone()
         cur.close()
-        return data
+        return data[0]
     except Error as e:
         print(e)
         return None
