@@ -16,5 +16,6 @@ EXPOSE 5000
 # TCP listener
 EXPOSE 1337
 
-CMD python3 __init__.py
+CMD ./check.sh &&  \
+    python3 __init__.py
 

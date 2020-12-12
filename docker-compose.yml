@@ -3,7 +3,8 @@ services:
   auth:
     build: ./auth
     environment:
-      - PYTHONUNBUFFERED=1
+      DB_HOST: 'db'
+      PYTHONUNBUFFERED: 1
     depends_on:
       - db
     ports:
